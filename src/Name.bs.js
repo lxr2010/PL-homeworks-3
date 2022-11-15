@@ -231,83 +231,63 @@ function shift(i, u) {
 }
 
 function subst$1(t, i, u) {
-  var r;
   switch (t.TAG | 0) {
     case /* Var */0 :
-        r = t._0 === i ? u : t;
-        break;
+        if (t._0 === i) {
+          return u;
+        } else {
+          return t;
+        }
     case /* Fn */1 :
-        r = {
-          TAG: /* Fn */1,
-          _0: subst$1(t._0, i + 1 | 0, shift_aux(1, 0, u))
-        };
-        break;
+        return {
+                TAG: /* Fn */1,
+                _0: subst$1(t._0, i + 1 | 0, shift_aux(1, 0, u))
+              };
     case /* App */2 :
-        r = {
-          TAG: /* App */2,
-          _0: subst$1(t._0, i, u),
-          _1: subst$1(t._1, i, u)
-        };
-        break;
+        return {
+                TAG: /* App */2,
+                _0: subst$1(t._0, i, u),
+                _1: subst$1(t._1, i, u)
+              };
     
   }
-  console.log("Subst by replace " + print_lambda$1({
-            TAG: /* Var */0,
-            _0: i
-          }) + " to " + print_lambda$1(u) + " on " + print_lambda$1(t) + " gets " + print_lambda$1(r));
-  return r;
 }
 
 function $$eval(t) {
-  var evalWithBindIndex = function (t, bi) {
-    var r;
-    switch (t.TAG | 0) {
-      case /* Var */0 :
-          r = t;
-          break;
-      case /* Fn */1 :
-          r = {
-            TAG: /* Fn */1,
-            _0: evalWithBindIndex(t._0, bi + 1 | 0)
-          };
-          break;
-      case /* App */2 :
-          var arg = t._1;
-          var f = t._0;
-          var b = evalWithBindIndex(f, bi);
-          switch (b.TAG | 0) {
-            case /* Fn */1 :
-                var b$1 = b._0;
-                var va = evalWithBindIndex(arg, bi);
-                var va_shifted = shift_aux(1, 0, va);
-                var b_substed = subst$1(b$1, 0, va_shifted);
-                var b_substed_deshifted = shift_aux(-1, 0, b_substed);
-                console.log("b = " + print_lambda$1(b$1));
-                console.log("va = " + print_lambda$1(va) + " shifted to " + print_lambda$1(va_shifted));
-                console.log("bi = " + print_lambda$1({
-                          TAG: /* Var */0,
-                          _0: bi
-                        }));
-                console.log("subst gets: " + print_lambda$1(b_substed));
-                console.log("deshift gets: " + print_lambda$1(b_substed_deshifted));
-                console.log("On bond index " + bi.toString() + " : Apply " + print_lambda$1(f) + " on " + print_lambda$1(arg) + " gets " + print_lambda$1(b_substed_deshifted));
-                r = evalWithBindIndex(b_substed_deshifted, bi);
-                break;
-            case /* Var */0 :
-            case /* App */2 :
-                r = {
-                  TAG: /* App */2,
-                  _0: b,
-                  _1: evalWithBindIndex(arg, bi)
-                };
-                break;
-            
-          }
-          break;
-      
-    }
-    console.log("On bond index " + bi.toString() + " : " + print_lambda$1(t) + " evals to " + print_lambda$1(r));
-    return r;
+  var evalWithBindIndex = function (_t, bi) {
+    while(true) {
+      var t = _t;
+      switch (t.TAG | 0) {
+        case /* Var */0 :
+            return t;
+        case /* Fn */1 :
+            return {
+                    TAG: /* Fn */1,
+                    _0: evalWithBindIndex(t._0, bi + 1 | 0)
+                  };
+        case /* App */2 :
+            var arg = t._1;
+            var b = evalWithBindIndex(t._0, bi);
+            switch (b.TAG | 0) {
+              case /* Fn */1 :
+                  var va = evalWithBindIndex(arg, bi);
+                  var va_shifted = shift_aux(1, 0, va);
+                  var b_substed = subst$1(b._0, 0, va_shifted);
+                  var b_substed_deshifted = shift_aux(-1, 0, b_substed);
+                  _t = b_substed_deshifted;
+                  continue ;
+              case /* Var */0 :
+              case /* App */2 :
+                  return {
+                          TAG: /* App */2,
+                          _0: b,
+                          _1: evalWithBindIndex(arg, bi)
+                        };
+              
+            }
+        
+      }
+    };
   };
   return evalWithBindIndex(t, 0);
 }
@@ -579,21 +559,460 @@ var DebruTest = {
 
 test(undefined);
 
+function toString$1(t) {
+  switch (t.TAG | 0) {
+    case /* Var */0 :
+        return t._0.toString();
+    case /* App */1 :
+        return "(" + toString$1(t._0) + " " + toString$1(t._1) + ")";
+    case /* Fn */2 :
+        return "(λ." + toString$1(t._0) + ")";
+    case /* Let */3 :
+        return "(" + toString$1(t._0) + "->" + toString$1(t._1) + ")";
+    
+  }
+}
+
+function print_lambda$2(l) {
+  var print_paren = function (b, s) {
+    if (b) {
+      return "(" + s + ")";
+    } else {
+      return s;
+    }
+  };
+  var go = function (l, p) {
+    switch (l.TAG | 0) {
+      case /* Var */0 :
+          return l._0.toString();
+      case /* App */1 :
+          return print_paren(p > 1, go(l._0, 1) + " " + go(l._1, 2));
+      case /* Fn */2 :
+          return print_paren(p > 0, "fun -> " + go(l._0, 0));
+      case /* Let */3 :
+          return print_paren(p > 1, "let " + go(l._0, 1) + " in " + go(l._1, 2));
+      
+    }
+  };
+  return go(l, 0);
+}
+
+function shift_aux$1(i, d, _u) {
+  while(true) {
+    var u = _u;
+    switch (u.TAG | 0) {
+      case /* Var */0 :
+          var j = u._0;
+          if (j >= d) {
+            return {
+                    TAG: /* Var */0,
+                    _0: i + j | 0
+                  };
+          } else {
+            return u;
+          }
+      case /* App */1 :
+          return {
+                  TAG: /* App */1,
+                  _0: shift_aux$1(i, d, u._0),
+                  _1: shift_aux$1(i, d, u._1)
+                };
+      case /* Fn */2 :
+          return {
+                  TAG: /* Fn */2,
+                  _0: shift_aux$1(i, d + 1 | 0, u._0)
+                };
+      case /* Let */3 :
+          _u = {
+            TAG: /* App */1,
+            _0: {
+              TAG: /* Fn */2,
+              _0: u._1
+            },
+            _1: u._0
+          };
+          continue ;
+      
+    }
+  };
+}
+
+function shift$1(i, u) {
+  return shift_aux$1(i, 0, u);
+}
+
+function subst$2(_t, i, u) {
+  while(true) {
+    var t = _t;
+    switch (t.TAG | 0) {
+      case /* Var */0 :
+          if (t._0 === i) {
+            return u;
+          } else {
+            return t;
+          }
+      case /* App */1 :
+          return {
+                  TAG: /* App */1,
+                  _0: subst$2(t._0, i, u),
+                  _1: subst$2(t._1, i, u)
+                };
+      case /* Fn */2 :
+          return {
+                  TAG: /* Fn */2,
+                  _0: subst$2(t._0, i + 1 | 0, shift_aux$1(1, 0, u))
+                };
+      case /* Let */3 :
+          _t = {
+            TAG: /* App */1,
+            _0: {
+              TAG: /* Fn */2,
+              _0: t._1
+            },
+            _1: t._0
+          };
+          continue ;
+      
+    }
+  };
+}
+
 function $$eval$1(t) {
-  throw {
-        RE_EXN_ID: "Assert_failure",
-        _1: [
-          "Name.res",
-          218,
-          4
-        ],
-        Error: new Error()
-      };
+  var evalWithBindIndex = function (_t, bi) {
+    while(true) {
+      var t = _t;
+      switch (t.TAG | 0) {
+        case /* Var */0 :
+            return t;
+        case /* App */1 :
+            var arg = t._1;
+            var b = evalWithBindIndex(t._0, bi);
+            if (b.TAG !== /* Fn */2) {
+              return {
+                      TAG: /* App */1,
+                      _0: b,
+                      _1: evalWithBindIndex(arg, bi)
+                    };
+            }
+            var va = evalWithBindIndex(arg, bi);
+            var va_shifted = shift_aux$1(1, 0, va);
+            var b_substed = subst$2(b._0, 0, va_shifted);
+            var b_substed_deshifted = shift_aux$1(-1, 0, b_substed);
+            _t = b_substed_deshifted;
+            continue ;
+        case /* Fn */2 :
+            return {
+                    TAG: /* Fn */2,
+                    _0: evalWithBindIndex(t._0, bi + 1 | 0)
+                  };
+        case /* Let */3 :
+            _t = {
+              TAG: /* App */1,
+              _0: {
+                TAG: /* Fn */2,
+                _0: t._1
+              },
+              _1: t._0
+            };
+            continue ;
+        
+      }
+    };
+  };
+  return evalWithBindIndex(t, 0);
 }
 
 var DebruLet = {
+  toString: toString$1,
+  print_lambda: print_lambda$2,
+  shift_aux: shift_aux$1,
+  shift: shift$1,
+  subst: subst$2,
   $$eval: $$eval$1
 };
+
+var trueB$1 = {
+  TAG: /* Fn */2,
+  _0: {
+    TAG: /* Fn */2,
+    _0: {
+      TAG: /* Var */0,
+      _0: 1
+    }
+  }
+};
+
+var falseB$1 = {
+  TAG: /* Fn */2,
+  _0: {
+    TAG: /* Fn */2,
+    _0: {
+      TAG: /* Var */0,
+      _0: 0
+    }
+  }
+};
+
+var zero$1 = {
+  TAG: /* Fn */2,
+  _0: {
+    TAG: /* Fn */2,
+    _0: {
+      TAG: /* Var */0,
+      _0: 0
+    }
+  }
+};
+
+var succ$1 = {
+  TAG: /* Fn */2,
+  _0: {
+    TAG: /* Fn */2,
+    _0: {
+      TAG: /* Fn */2,
+      _0: {
+        TAG: /* App */1,
+        _0: {
+          TAG: /* Var */0,
+          _0: 1
+        },
+        _1: {
+          TAG: /* App */1,
+          _0: {
+            TAG: /* App */1,
+            _0: {
+              TAG: /* Var */0,
+              _0: 2
+            },
+            _1: {
+              TAG: /* Var */0,
+              _0: 1
+            }
+          },
+          _1: {
+            TAG: /* Var */0,
+            _0: 0
+          }
+        }
+      }
+    }
+  }
+};
+
+var pair$1 = {
+  TAG: /* Fn */2,
+  _0: {
+    TAG: /* Fn */2,
+    _0: {
+      TAG: /* Fn */2,
+      _0: {
+        TAG: /* App */1,
+        _0: {
+          TAG: /* App */1,
+          _0: {
+            TAG: /* Var */0,
+            _0: 0
+          },
+          _1: {
+            TAG: /* Var */0,
+            _0: 2
+          }
+        },
+        _1: {
+          TAG: /* Var */0,
+          _0: 1
+        }
+      }
+    }
+  }
+};
+
+var fst$1 = {
+  TAG: /* Fn */2,
+  _0: {
+    TAG: /* App */1,
+    _0: {
+      TAG: /* Var */0,
+      _0: 0
+    },
+    _1: trueB$1
+  }
+};
+
+var snd$1 = {
+  TAG: /* Fn */2,
+  _0: {
+    TAG: /* App */1,
+    _0: {
+      TAG: /* Var */0,
+      _0: 0
+    },
+    _1: falseB$1
+  }
+};
+
+var pred_0 = {
+  TAG: /* Fn */2,
+  _0: {
+    TAG: /* App */1,
+    _0: {
+      TAG: /* App */1,
+      _0: pair$1,
+      _1: {
+        TAG: /* App */1,
+        _0: snd$1,
+        _1: {
+          TAG: /* Var */0,
+          _0: 0
+        }
+      }
+    },
+    _1: {
+      TAG: /* App */1,
+      _0: succ$1,
+      _1: {
+        TAG: /* App */1,
+        _0: snd$1,
+        _1: {
+          TAG: /* Var */0,
+          _0: 0
+        }
+      }
+    }
+  }
+};
+
+var pred_1 = {
+  TAG: /* Let */3,
+  _0: {
+    TAG: /* App */1,
+    _0: {
+      TAG: /* App */1,
+      _0: pair$1,
+      _1: zero$1
+    },
+    _1: zero$1
+  },
+  _1: {
+    TAG: /* Fn */2,
+    _0: {
+      TAG: /* App */1,
+      _0: fst$1,
+      _1: {
+        TAG: /* App */1,
+        _0: {
+          TAG: /* App */1,
+          _0: {
+            TAG: /* Var */0,
+            _0: 0
+          },
+          _1: {
+            TAG: /* Var */0,
+            _0: 2
+          }
+        },
+        _1: {
+          TAG: /* Var */0,
+          _0: 1
+        }
+      }
+    }
+  }
+};
+
+var pred$1 = {
+  TAG: /* Let */3,
+  _0: pred_0,
+  _1: pred_1
+};
+
+function toChurchNumB$1(n) {
+  var _n = n;
+  var _churchNumB = zero$1;
+  while(true) {
+    var churchNumB = _churchNumB;
+    var n$1 = _n;
+    if (n$1 < 0) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Name.res",
+              321,
+              16
+            ],
+            Error: new Error()
+          };
+    }
+    if (n$1 === 0) {
+      return churchNumB;
+    }
+    _churchNumB = {
+      TAG: /* App */1,
+      _0: succ$1,
+      _1: churchNumB
+    };
+    _n = n$1 - 1 | 0;
+    continue ;
+  };
+}
+
+function test$1(param) {
+  console.log(print_lambda$2($$eval$1({
+                TAG: /* Let */3,
+                _0: pred$1,
+                _1: {
+                  TAG: /* App */1,
+                  _0: {
+                    TAG: /* Var */0,
+                    _0: 0
+                  },
+                  _1: toChurchNumB$1(8)
+                }
+              })));
+}
+
+var DebruLetTest_id = {
+  TAG: /* Fn */2,
+  _0: {
+    TAG: /* Var */0,
+    _0: 0
+  }
+};
+
+var DebruLetTest_one = {
+  TAG: /* Fn */2,
+  _0: {
+    TAG: /* Fn */2,
+    _0: {
+      TAG: /* App */1,
+      _0: {
+        TAG: /* Var */0,
+        _0: 1
+      },
+      _1: {
+        TAG: /* Var */0,
+        _0: 0
+      }
+    }
+  }
+};
+
+var DebruLetTest = {
+  id: DebruLetTest_id,
+  trueB: trueB$1,
+  falseB: falseB$1,
+  zero: zero$1,
+  one: DebruLetTest_one,
+  succ: succ$1,
+  pair: pair$1,
+  fst: fst$1,
+  snd: snd$1,
+  pred: pred$1,
+  toChurchNumB: toChurchNumB$1,
+  test: test$1
+};
+
+test$1(undefined);
 
 var id = {
   TAG: /* Fn */1,
@@ -613,4 +1032,5 @@ exports.subst = subst;
 exports.Debru = Debru;
 exports.DebruTest = DebruTest;
 exports.DebruLet = DebruLet;
+exports.DebruLetTest = DebruLetTest;
 /*  Not a pure module */
