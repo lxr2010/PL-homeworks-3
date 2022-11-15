@@ -2,169 +2,6 @@
 'use strict';
 
 
-function print_lambda(l) {
-  var print_paren = function (b, s) {
-    if (b) {
-      return "(" + s + ")";
-    } else {
-      return s;
-    }
-  };
-  var go = function (l, p) {
-    switch (l.TAG | 0) {
-      case /* Var */0 :
-          return l._0;
-      case /* Fn */1 :
-          return print_paren(p > 0, "fun " + l._0 + " -> " + go(l._1, 0));
-      case /* App */2 :
-          return print_paren(p > 1, go(l._0, 1) + " " + go(l._1, 2));
-      
-    }
-  };
-  return go(l, 0);
-}
-
-function rename(t, old, $$new) {
-  var go = function (t) {
-    switch (t.TAG | 0) {
-      case /* Var */0 :
-          var x = t._0;
-          if (x === old) {
-            return {
-                    TAG: /* Var */0,
-                    _0: $$new
-                  };
-          } else {
-            return {
-                    TAG: /* Var */0,
-                    _0: x
-                  };
-          }
-      case /* Fn */1 :
-          var a = t._1;
-          var x$1 = t._0;
-          if (x$1 === old) {
-            return {
-                    TAG: /* Fn */1,
-                    _0: $$new,
-                    _1: go(a)
-                  };
-          } else {
-            return {
-                    TAG: /* Fn */1,
-                    _0: x$1,
-                    _1: go(a)
-                  };
-          }
-      case /* App */2 :
-          return {
-                  TAG: /* App */2,
-                  _0: go(t._0),
-                  _1: go(t._1)
-                };
-      
-    }
-  };
-  return go(t);
-}
-
-var t = {
-  TAG: /* Fn */1,
-  _0: "x",
-  _1: {
-    TAG: /* App */2,
-    _0: {
-      TAG: /* Var */0,
-      _0: "y"
-    },
-    _1: {
-      TAG: /* Var */0,
-      _0: "x"
-    }
-  }
-};
-
-console.log(print_lambda(t));
-
-console.log(print_lambda(rename(t, "x", "z")));
-
-var t$1 = {
-  TAG: /* Fn */1,
-  _0: "x",
-  _1: {
-    TAG: /* Fn */1,
-    _0: "y",
-    _1: {
-      TAG: /* App */2,
-      _0: {
-        TAG: /* App */2,
-        _0: {
-          TAG: /* Fn */1,
-          _0: "x",
-          _1: {
-            TAG: /* Var */0,
-            _0: "x"
-          }
-        },
-        _1: {
-          TAG: /* Var */0,
-          _0: "x"
-        }
-      },
-      _1: {
-        TAG: /* Var */0,
-        _0: "y"
-      }
-    }
-  }
-};
-
-console.log(print_lambda(t$1));
-
-console.log(print_lambda(rename(t$1, "x", "z")));
-
-function fresh_name(param) {
-  throw {
-        RE_EXN_ID: "Assert_failure",
-        _1: [
-          "Name.res",
-          53,
-          2
-        ],
-        Error: new Error()
-      };
-}
-
-function subst(t, x, u) {
-  switch (t.TAG | 0) {
-    case /* Var */0 :
-        if (x === t._0) {
-          return u;
-        } else {
-          return t;
-        }
-    case /* Fn */1 :
-        var y = t._0;
-        if (x === y) {
-          return t;
-        }
-        var y$p = fresh_name(undefined);
-        var b$p = rename(t._1, y, y$p);
-        return {
-                TAG: /* Fn */1,
-                _0: y$p,
-                _1: subst(b$p, x, u)
-              };
-    case /* App */2 :
-        return {
-                TAG: /* App */2,
-                _0: subst(t._0, x, u),
-                _1: subst(t._1, x, u)
-              };
-    
-  }
-}
-
 function toString(t) {
   switch (t.TAG | 0) {
     case /* Var */0 :
@@ -177,7 +14,7 @@ function toString(t) {
   }
 }
 
-function print_lambda$1(l) {
+function print_lambda(l) {
   var print_paren = function (b, s) {
     if (b) {
       return "(" + s + ")";
@@ -230,7 +67,7 @@ function shift(i, u) {
   return shift_aux(i, 0, u);
 }
 
-function subst$1(t, i, u) {
+function subst(t, i, u) {
   switch (t.TAG | 0) {
     case /* Var */0 :
         if (t._0 === i) {
@@ -241,13 +78,13 @@ function subst$1(t, i, u) {
     case /* Fn */1 :
         return {
                 TAG: /* Fn */1,
-                _0: subst$1(t._0, i + 1 | 0, shift_aux(1, 0, u))
+                _0: subst(t._0, i + 1 | 0, shift_aux(1, 0, u))
               };
     case /* App */2 :
         return {
                 TAG: /* App */2,
-                _0: subst$1(t._0, i, u),
-                _1: subst$1(t._1, i, u)
+                _0: subst(t._0, i, u),
+                _1: subst(t._1, i, u)
               };
     
   }
@@ -272,7 +109,7 @@ function $$eval(t) {
               case /* Fn */1 :
                   var va = evalWithBindIndex(arg, bi);
                   var va_shifted = shift_aux(1, 0, va);
-                  var b_substed = subst$1(b._0, 0, va_shifted);
+                  var b_substed = subst(b._0, 0, va_shifted);
                   var b_substed_deshifted = shift_aux(-1, 0, b_substed);
                   _t = b_substed_deshifted;
                   continue ;
@@ -294,10 +131,10 @@ function $$eval(t) {
 
 var Debru = {
   toString: toString,
-  print_lambda: print_lambda$1,
+  print_lambda: print_lambda,
   shift_aux: shift_aux,
   shift: shift,
-  subst: subst$1,
+  subst: subst,
   $$eval: $$eval
 };
 
@@ -489,7 +326,7 @@ function toChurchNumB(n) {
             RE_EXN_ID: "Assert_failure",
             _1: [
               "Name.res",
-              174,
+              96,
               16
             ],
             Error: new Error()
@@ -509,7 +346,7 @@ function toChurchNumB(n) {
 }
 
 function test(param) {
-  console.log(print_lambda$1($$eval({
+  console.log(print_lambda($$eval({
                 TAG: /* App */2,
                 _0: pred,
                 _1: toChurchNumB(8)
@@ -573,7 +410,7 @@ function toString$1(t) {
   }
 }
 
-function print_lambda$2(l) {
+function print_lambda$1(l) {
   var print_paren = function (b, s) {
     if (b) {
       return "(" + s + ")";
@@ -641,7 +478,7 @@ function shift$1(i, u) {
   return shift_aux$1(i, 0, u);
 }
 
-function subst$2(_t, i, u) {
+function subst$1(_t, i, u) {
   while(true) {
     var t = _t;
     switch (t.TAG | 0) {
@@ -654,13 +491,13 @@ function subst$2(_t, i, u) {
       case /* App */1 :
           return {
                   TAG: /* App */1,
-                  _0: subst$2(t._0, i, u),
-                  _1: subst$2(t._1, i, u)
+                  _0: subst$1(t._0, i, u),
+                  _1: subst$1(t._1, i, u)
                 };
       case /* Fn */2 :
           return {
                   TAG: /* Fn */2,
-                  _0: subst$2(t._0, i + 1 | 0, shift_aux$1(1, 0, u))
+                  _0: subst$1(t._0, i + 1 | 0, shift_aux$1(1, 0, u))
                 };
       case /* Let */3 :
           _t = {
@@ -696,7 +533,7 @@ function $$eval$1(t) {
             }
             var va = evalWithBindIndex(arg, bi);
             var va_shifted = shift_aux$1(1, 0, va);
-            var b_substed = subst$2(b._0, 0, va_shifted);
+            var b_substed = subst$1(b._0, 0, va_shifted);
             var b_substed_deshifted = shift_aux$1(-1, 0, b_substed);
             _t = b_substed_deshifted;
             continue ;
@@ -724,10 +561,10 @@ function $$eval$1(t) {
 
 var DebruLet = {
   toString: toString$1,
-  print_lambda: print_lambda$2,
+  print_lambda: print_lambda$1,
   shift_aux: shift_aux$1,
   shift: shift$1,
-  subst: subst$2,
+  subst: subst$1,
   $$eval: $$eval$1
 };
 
@@ -937,7 +774,7 @@ function toChurchNumB$1(n) {
             RE_EXN_ID: "Assert_failure",
             _1: [
               "Name.res",
-              321,
+              214,
               16
             ],
             Error: new Error()
@@ -957,7 +794,7 @@ function toChurchNumB$1(n) {
 }
 
 function test$1(param) {
-  console.log(print_lambda$2($$eval$1({
+  console.log(print_lambda$1($$eval$1({
                 TAG: /* Let */3,
                 _0: pred$1,
                 _1: {
@@ -1014,21 +851,6 @@ var DebruLetTest = {
 
 test$1(undefined);
 
-var id = {
-  TAG: /* Fn */1,
-  _0: "x",
-  _1: {
-    TAG: /* Var */0,
-    _0: "x"
-  }
-};
-
-exports.print_lambda = print_lambda;
-exports.rename = rename;
-exports.id = id;
-exports.t = t$1;
-exports.fresh_name = fresh_name;
-exports.subst = subst;
 exports.Debru = Debru;
 exports.DebruTest = DebruTest;
 exports.DebruLet = DebruLet;

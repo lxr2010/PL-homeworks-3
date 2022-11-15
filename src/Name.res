@@ -1,71 +1,3 @@
-type rec lambda = 
-  | Var(string)
-  | Fn(string, lambda)
-  | App(lambda, lambda)
-
-let print_lambda = l => {
-  let print_paren = (b, s) => {
-    if b { "(" ++ s ++ ")" } else { s }
-  }
-  let rec go = (l, p) => {
-    switch l {
-      | Var(x) => x
-      | Fn(x, a) => print_paren(p>0, "fun " ++ x ++ " -> " ++ go(a, 0))
-      | App(a, b) => print_paren(p>1, go(a, 1) ++ " " ++ go(b, 2))
-
-    }
-  }
-  go(l, 0)
-}
-
-// v must be closed. a[v/x]
-let rec subst = (x, v, a) => {
-  switch a {
-    | Var(y) => if x == y { v } else { a }
-    | Fn(y, b) => if x == y { a } else { Fn(y, subst(x, v, b)) }
-    | App(b, c) => App(subst(x, v, b), subst(x, v, c))
-  }
-}
-
-let rename = (t, old, new) => {
-  let rec go = (t) => {
-    switch t {
-    | Var(x) => if x == old { Var(new) } else { Var(x) }
-    | Fn(x, a) => if x == old { Fn(new, go(a)) } else {Fn(x, go(a))}
-    | App(a, b) => App(go(a), go(b))
-    }
-  }
-  go(t)
-}
-
-let id = Fn("x", Var("x"))
-// fun x -> y x
-let t = Fn("x", App(Var("y"), Var("x")))
-Js.Console.log(print_lambda(t))
-Js.Console.log(print_lambda(rename(t, "x", "z")))
-
-// fun x -> fun y -> (fun x -> x) x y
-let t = Fn("x", Fn("y", App(App(Fn("x", Var("x")), Var("x")), Var("y"))))
-Js.Console.log(print_lambda(t))
-Js.Console.log(print_lambda(rename(t, "x", "z")))
-
-let fresh_name = () => {
-  assert false
-}
-
-// t[u/x] where u might have free variables
-let rec subst = (t, x, u) => {
-  switch t {
-  | Var(y) => if x == y { u } else { t }
-  | Fn(y, b) => if x == y { t } else {
-    let y' = fresh_name ()
-    let b' = rename(b, y, y')
-    Fn(y', subst(b', x, u)) 
-  }
-  | App(a, b) => App(subst(a, x, u), subst(b, x, u))
-  }
-}
-
 module Debru = {
   type rec lambda = 
   | Var(int)
@@ -107,19 +39,17 @@ module Debru = {
 
   // t[u/i]: use u to replace Var(i) in term t
   let rec subst = (t, i, u) => {
-    let r = switch t {
+    switch t {
     | Var(j) => if j == i { u } else { t }
     | Fn(b) => Fn(subst(b, i+1, shift(1, u)))
     | App(a, b) => App(subst(a, i, u), subst(b, i, u))
     }
-    // Js.log("Subst by replace " ++ print_lambda(Var(i)) ++ " to " ++ print_lambda(u) ++ " on " ++ print_lambda(t) ++ " gets " ++ print_lambda(r))
-    r
   }
   
   // Homework: implement the complete interpreter
   let eval = (t: lambda) => {
     let rec evalWithBindIndex = (t:lambda, bi:int) => {
-      let r = switch t {
+      switch t {
       | Var(_) => t
       | Fn(b) => Fn(evalWithBindIndex(b, bi+1))
       | App(f, arg) => {
@@ -129,20 +59,12 @@ module Debru = {
           let va_shifted = shift(1,va)
           let b_substed = subst(b, 0, va_shifted)
           let b_substed_deshifted = shift(-1, b_substed)
-          // Js.log("b = " ++ print_lambda(b))
-          // Js.log("va = " ++ print_lambda(va) ++ " shifted to " ++ print_lambda(va_shifted))
-          // Js.log("bi = " ++ print_lambda(Var(bi)))
-          // Js.log("subst gets: " ++ print_lambda(b_substed)) 
-          // Js.log("deshift gets: " ++ print_lambda(b_substed_deshifted))
-          // Js.log("On bond index " ++ Js.Int.toString(bi) ++ " : " ++ "Apply " ++ print_lambda(f) ++ " on " ++ print_lambda(arg) ++ " gets " ++ print_lambda(b_substed_deshifted))
           evalWithBindIndex(b_substed_deshifted, bi)
         }
         | k => App(k, evalWithBindIndex(arg, bi))
         }
       }
       }
-      // Js.log("On bond index " ++ Js.Int.toString(bi) ++ " : " ++print_lambda(t) ++ " evals to " ++ print_lambda(r))
-      r
     }
     evalWithBindIndex(t, 0)
   }
@@ -182,25 +104,7 @@ module DebruTest = {
   }
 
   let test = () => {
-    // Js.log(print_lambda(id))
-    // Js.log(print_lambda(trueB))
-    // Js.log(print_lambda(falseB))
-    // Js.log(print_lambda(zero))
-    // Js.log(print_lambda(one))
-    // Js.log(print_lambda(fst))
-    // Js.log(print_lambda(snd))
-    // Js.log(print_lambda(succ))
-    // Js.log(print_lambda(toChurchNumB(9)))
-    // Js.log(print_lambda(eval(toChurchNumB(9))))
-    // let pair2_1 = App(App(pair,toChurchNumB(2)),toChurchNumB(1))
-    // Js.log(print_lambda(eval(pair2_1)))
-    // Js.log(print_lambda(eval(App(fst,pair2_1))))
-    // Js.log(print_lambda(eval(App(snd,pair2_1))))
-    // Js.log(print_lambda(App(pred,toChurchNumB(1))))
     Js.log(print_lambda(eval(App(pred,toChurchNumB(8)))))
-    // let examp = Fn(App(Fn(App(App(pair,Var(1)),Var(0))),Var(3)))
-    // Js.log(print_lambda(examp))
-    // Js.log(print_lambda(eval(examp)))
   }
 }
 
@@ -251,21 +155,18 @@ module DebruLet = {
 
   // t[u/i]: use u to replace Var(i) in term t
   let rec subst = (t, i, u) => {
-    let r = switch t {
+    switch t {
     | Var(j) => if j == i { u } else { t }
     | Fn(b) => Fn(subst(b, i+1, shift(1, u)))
     | App(a, b) => App(subst(a, i, u), subst(b, i, u))
     | Let(l, b) => subst(App(Fn(b),l),i,u)
     }
-    // Js.log("Subst by replace " ++ print_lambda(Var(i)) ++ " to " ++ print_lambda(u) ++ " on " ++ print_lambda(t) ++ " gets " ++ print_lambda(r))
-    r
   }
- 
-// eval Let(x, exp1, exp2) == eval App(Fn(x,exp2),exp1)
+
 // eval Let(l1, l2) == eval App((lambda.l2),l1)
   let eval = (t: lambda) => {
     let rec evalWithBindIndex = (t:lambda, bi:int) => {
-      let r = switch t {
+      switch t {
       | Var(_) => t
       | Fn(b) => Fn(evalWithBindIndex(b, bi+1))
       | Let(loc, body) => evalWithBindIndex(App(Fn(body),loc),bi)
@@ -276,20 +177,12 @@ module DebruLet = {
           let va_shifted = shift(1,va)
           let b_substed = subst(b, 0, va_shifted)
           let b_substed_deshifted = shift(-1, b_substed)
-          // Js.log("b = " ++ print_lambda(b))
-          // Js.log("va = " ++ print_lambda(va) ++ " shifted to " ++ print_lambda(va_shifted))
-          // Js.log("bi = " ++ print_lambda(Var(bi)))
-          // Js.log("subst gets: " ++ print_lambda(b_substed)) 
-          // Js.log("deshift gets: " ++ print_lambda(b_substed_deshifted))
-          // Js.log("On bond index " ++ Js.Int.toString(bi) ++ " : " ++ "Apply " ++ print_lambda(f) ++ " on " ++ print_lambda(arg) ++ " gets " ++ print_lambda(b_substed_deshifted))
           evalWithBindIndex(b_substed_deshifted, bi)
         }
         | k => App(k, evalWithBindIndex(arg, bi))
         }
       }
       }
-      // Js.log("On bond index " ++ Js.Int.toString(bi) ++ " : " ++print_lambda(t) ++ " evals to " ++ print_lambda(r))
-      r
     }
     evalWithBindIndex(t, 0)
   }
@@ -329,26 +222,7 @@ module DebruLetTest = {
   }
 
   let test = () => {
-    // Js.log(print_lambda(id))
-    // Js.log(print_lambda(trueB))
-    // Js.log(print_lambda(falseB))
-    // Js.log(print_lambda(zero))
-    // Js.log(print_lambda(one))
-    // Js.log(print_lambda(fst))
-    // Js.log(print_lambda(snd))
-    // Js.log(print_lambda(succ))
-    // Js.log(print_lambda(toChurchNumB(9)))
-    // Js.log(print_lambda(eval(toChurchNumB(9))))
-    // let pair2_1 = App(App(pair,toChurchNumB(2)),toChurchNumB(1))
-    // Js.log(print_lambda(eval(pair2_1)))
-    // Js.log(print_lambda(eval(App(fst,pair2_1))))
-    // Js.log(print_lambda(eval(App(snd,pair2_1))))
-    // Js.log(print_lambda(App(pred,toChurchNumB(1))))
-    // Js.log(print_lambda(eval(App(pred,toChurchNumB(8)))))
     Js.log(print_lambda(eval(Let(pred,App(Var(0),toChurchNumB(8))))))
-    // let examp = Fn(App(Fn(App(App(pair,Var(1)),Var(0))),Var(3)))
-    // Js.log(print_lambda(examp))
-    // Js.log(print_lambda(eval(examp)))
   }
 }
 
