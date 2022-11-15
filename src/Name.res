@@ -107,11 +107,13 @@ module Debru = {
 
   // t[u/i]: use u to replace Var(i) in term t
   let rec subst = (t, i, u) => {
-    switch t {
+    let r = switch t {
     | Var(j) => if j == i { u } else { t }
     | Fn(b) => Fn(subst(b, i+1, shift(1, u)))
     | App(a, b) => App(subst(a, i, u), subst(b, i, u))
     }
+    Js.log("Subst by replace " ++ print_lambda(Var(i)) ++ " to " ++ print_lambda(u) ++ " on " ++ print_lambda(t) ++ " gets " ++ print_lambda(r))
+    r
   }
   
   // Homework: implement the complete interpreter
@@ -124,13 +126,22 @@ module Debru = {
         switch evalWithBindIndex(f,bi) {
         | Fn(b) => {
           let va = evalWithBindIndex(arg, bi)
-          evalWithBindIndex(subst(b, bi+1, shift(1,va)), bi+1)
+          let va_shifted = shift(1,va)
+          let b_substed = subst(b, 0, va_shifted)
+          let b_substed_deshifted = shift(-1, b_substed)
+          Js.log("b = " ++ print_lambda(b))
+          Js.log("va = " ++ print_lambda(va) ++ " shifted to " ++ print_lambda(va_shifted))
+          Js.log("bi = " ++ print_lambda(Var(bi)))
+          Js.log("subst gets: " ++ print_lambda(b_substed)) 
+          Js.log("deshift gets: " ++ print_lambda(b_substed_deshifted))
+          Js.log("On bond index " ++ Js.Int.toString(bi) ++ " : " ++ "Apply " ++ print_lambda(f) ++ " on " ++ print_lambda(arg) ++ " gets " ++ print_lambda(b_substed_deshifted))
+          evalWithBindIndex(b_substed_deshifted, bi)
         }
         | k => App(k, evalWithBindIndex(arg, bi))
         }
       }
       }
-      Js.log(print_lambda(t) ++ " evals to " ++ print_lambda(r))
+      Js.log("On bond index " ++ Js.Int.toString(bi) ++ " : " ++print_lambda(t) ++ " evals to " ++ print_lambda(r))
       r
     }
     evalWithBindIndex(t, 0)
@@ -186,7 +197,10 @@ module DebruTest = {
     // Js.log(print_lambda(eval(App(fst,pair2_1))))
     // Js.log(print_lambda(eval(App(snd,pair2_1))))
     // Js.log(print_lambda(App(pred,toChurchNumB(1))))
-    Js.log(print_lambda(eval(App(pred,toChurchNumB(0)))))
+    Js.log(print_lambda(eval(App(pred,toChurchNumB(8)))))
+    // let examp = Fn(App(Fn(App(App(pair,Var(1)),Var(0))),Var(3)))
+    // Js.log(print_lambda(examp))
+    // Js.log(print_lambda(eval(examp)))
   }
 }
 

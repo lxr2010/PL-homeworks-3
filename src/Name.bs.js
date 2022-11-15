@@ -231,26 +231,31 @@ function shift(i, u) {
 }
 
 function subst$1(t, i, u) {
+  var r;
   switch (t.TAG | 0) {
     case /* Var */0 :
-        if (t._0 === i) {
-          return u;
-        } else {
-          return t;
-        }
+        r = t._0 === i ? u : t;
+        break;
     case /* Fn */1 :
-        return {
-                TAG: /* Fn */1,
-                _0: subst$1(t._0, i + 1 | 0, shift_aux(1, 0, u))
-              };
+        r = {
+          TAG: /* Fn */1,
+          _0: subst$1(t._0, i + 1 | 0, shift_aux(1, 0, u))
+        };
+        break;
     case /* App */2 :
-        return {
-                TAG: /* App */2,
-                _0: subst$1(t._0, i, u),
-                _1: subst$1(t._1, i, u)
-              };
+        r = {
+          TAG: /* App */2,
+          _0: subst$1(t._0, i, u),
+          _1: subst$1(t._1, i, u)
+        };
+        break;
     
   }
+  console.log("Subst by replace " + print_lambda$1({
+            TAG: /* Var */0,
+            _0: i
+          }) + " to " + print_lambda$1(u) + " on " + print_lambda$1(t) + " gets " + print_lambda$1(r));
+  return r;
 }
 
 function $$eval(t) {
@@ -268,11 +273,25 @@ function $$eval(t) {
           break;
       case /* App */2 :
           var arg = t._1;
-          var b = evalWithBindIndex(t._0, bi);
+          var f = t._0;
+          var b = evalWithBindIndex(f, bi);
           switch (b.TAG | 0) {
             case /* Fn */1 :
+                var b$1 = b._0;
                 var va = evalWithBindIndex(arg, bi);
-                r = evalWithBindIndex(subst$1(b._0, bi + 1 | 0, shift_aux(1, 0, va)), bi + 1 | 0);
+                var va_shifted = shift_aux(1, 0, va);
+                var b_substed = subst$1(b$1, 0, va_shifted);
+                var b_substed_deshifted = shift_aux(-1, 0, b_substed);
+                console.log("b = " + print_lambda$1(b$1));
+                console.log("va = " + print_lambda$1(va) + " shifted to " + print_lambda$1(va_shifted));
+                console.log("bi = " + print_lambda$1({
+                          TAG: /* Var */0,
+                          _0: bi
+                        }));
+                console.log("subst gets: " + print_lambda$1(b_substed));
+                console.log("deshift gets: " + print_lambda$1(b_substed_deshifted));
+                console.log("On bond index " + bi.toString() + " : Apply " + print_lambda$1(f) + " on " + print_lambda$1(arg) + " gets " + print_lambda$1(b_substed_deshifted));
+                r = evalWithBindIndex(b_substed_deshifted, bi);
                 break;
             case /* Var */0 :
             case /* App */2 :
@@ -287,7 +306,7 @@ function $$eval(t) {
           break;
       
     }
-    console.log(print_lambda$1(t) + " evals to " + print_lambda$1(r));
+    console.log("On bond index " + bi.toString() + " : " + print_lambda$1(t) + " evals to " + print_lambda$1(r));
     return r;
   };
   return evalWithBindIndex(t, 0);
@@ -490,7 +509,7 @@ function toChurchNumB(n) {
             RE_EXN_ID: "Assert_failure",
             _1: [
               "Name.res",
-              163,
+              174,
               16
             ],
             Error: new Error()
@@ -513,7 +532,7 @@ function test(param) {
   console.log(print_lambda$1($$eval({
                 TAG: /* App */2,
                 _0: pred,
-                _1: toChurchNumB(0)
+                _1: toChurchNumB(8)
               })));
 }
 
@@ -565,7 +584,7 @@ function $$eval$1(t) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Name.res",
-          204,
+          218,
           4
         ],
         Error: new Error()
