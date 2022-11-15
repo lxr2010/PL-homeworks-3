@@ -128,7 +128,7 @@ function fresh_name(param) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Name.res",
-          54,
+          53,
           2
         ],
         Error: new Error()
@@ -138,22 +138,18 @@ function fresh_name(param) {
 function subst(t, x, u) {
   switch (t.TAG | 0) {
     case /* Var */0 :
-        var y = t._0;
-        if (x === y) {
+        if (x === t._0) {
           return u;
         } else {
-          return {
-                  TAG: /* Var */0,
-                  _0: y
-                };
+          return t;
         }
     case /* Fn */1 :
-        var y$1 = t._0;
-        if (x === y$1) {
+        var y = t._0;
+        if (x === y) {
           return t;
         }
         var y$p = fresh_name(undefined);
-        var b$p = rename(t._1, y$1, y$p);
+        var b$p = rename(t._1, y, y$p);
         return {
                 TAG: /* Fn */1,
                 _0: y$p,
@@ -169,7 +165,41 @@ function subst(t, x, u) {
   }
 }
 
-function shift(i, d, u) {
+function toString(t) {
+  switch (t.TAG | 0) {
+    case /* Var */0 :
+        return t._0.toString();
+    case /* Fn */1 :
+        return "(λ." + toString(t._0) + ")";
+    case /* App */2 :
+        return "(" + toString(t._0) + " " + toString(t._1) + ")";
+    
+  }
+}
+
+function print_lambda$1(l) {
+  var print_paren = function (b, s) {
+    if (b) {
+      return "(" + s + ")";
+    } else {
+      return s;
+    }
+  };
+  var go = function (l, p) {
+    switch (l.TAG | 0) {
+      case /* Var */0 :
+          return l._0.toString();
+      case /* Fn */1 :
+          return print_paren(p > 0, "fun -> " + go(l._0, 0));
+      case /* App */2 :
+          return print_paren(p > 1, go(l._0, 1) + " " + go(l._1, 2));
+      
+    }
+  };
+  return go(l, 0);
+}
+
+function shift_aux(i, d, u) {
   switch (u.TAG | 0) {
     case /* Var */0 :
         var j = u._0;
@@ -184,17 +214,20 @@ function shift(i, d, u) {
     case /* Fn */1 :
         return {
                 TAG: /* Fn */1,
-                _0: u._0,
-                _1: shift(i, d + 1 | 0, u._1)
+                _0: shift_aux(i, d + 1 | 0, u._0)
               };
     case /* App */2 :
         return {
                 TAG: /* App */2,
-                _0: shift(i, d, u._0),
-                _1: shift(i, d, u._1)
+                _0: shift_aux(i, d, u._0),
+                _1: shift_aux(i, d, u._1)
               };
     
   }
+}
+
+function shift(i, u) {
+  return shift_aux(i, 0, u);
 }
 
 function subst$1(t, i, u) {
@@ -208,8 +241,7 @@ function subst$1(t, i, u) {
     case /* Fn */1 :
         return {
                 TAG: /* Fn */1,
-                _0: t._0,
-                _1: subst$1(t._1, i + 1 | 0, shift(1, 0, u))
+                _0: subst$1(t._0, i + 1 | 0, shift_aux(1, 0, u))
               };
     case /* App */2 :
         return {
@@ -221,12 +253,327 @@ function subst$1(t, i, u) {
   }
 }
 
-var f = 3;
+function $$eval(t) {
+  var evalWithBindIndex = function (t, bi) {
+    var r;
+    switch (t.TAG | 0) {
+      case /* Var */0 :
+          r = t;
+          break;
+      case /* Fn */1 :
+          r = {
+            TAG: /* Fn */1,
+            _0: evalWithBindIndex(t._0, bi + 1 | 0)
+          };
+          break;
+      case /* App */2 :
+          var arg = t._1;
+          var b = evalWithBindIndex(t._0, bi);
+          switch (b.TAG | 0) {
+            case /* Fn */1 :
+                var va = evalWithBindIndex(arg, bi);
+                r = evalWithBindIndex(subst$1(b._0, bi + 1 | 0, shift_aux(1, 0, va)), bi + 1 | 0);
+                break;
+            case /* Var */0 :
+            case /* App */2 :
+                r = {
+                  TAG: /* App */2,
+                  _0: b,
+                  _1: evalWithBindIndex(arg, bi)
+                };
+                break;
+            
+          }
+          break;
+      
+    }
+    console.log(print_lambda$1(t) + " evals to " + print_lambda$1(r));
+    return r;
+  };
+  return evalWithBindIndex(t, 0);
+}
 
 var Debru = {
+  toString: toString,
+  print_lambda: print_lambda$1,
+  shift_aux: shift_aux,
   shift: shift,
   subst: subst$1,
-  f: f
+  $$eval: $$eval
+};
+
+var trueB = {
+  TAG: /* Fn */1,
+  _0: {
+    TAG: /* Fn */1,
+    _0: {
+      TAG: /* Var */0,
+      _0: 1
+    }
+  }
+};
+
+var falseB = {
+  TAG: /* Fn */1,
+  _0: {
+    TAG: /* Fn */1,
+    _0: {
+      TAG: /* Var */0,
+      _0: 0
+    }
+  }
+};
+
+var zero = {
+  TAG: /* Fn */1,
+  _0: {
+    TAG: /* Fn */1,
+    _0: {
+      TAG: /* Var */0,
+      _0: 0
+    }
+  }
+};
+
+var succ = {
+  TAG: /* Fn */1,
+  _0: {
+    TAG: /* Fn */1,
+    _0: {
+      TAG: /* Fn */1,
+      _0: {
+        TAG: /* App */2,
+        _0: {
+          TAG: /* Var */0,
+          _0: 1
+        },
+        _1: {
+          TAG: /* App */2,
+          _0: {
+            TAG: /* App */2,
+            _0: {
+              TAG: /* Var */0,
+              _0: 2
+            },
+            _1: {
+              TAG: /* Var */0,
+              _0: 1
+            }
+          },
+          _1: {
+            TAG: /* Var */0,
+            _0: 0
+          }
+        }
+      }
+    }
+  }
+};
+
+var pair = {
+  TAG: /* Fn */1,
+  _0: {
+    TAG: /* Fn */1,
+    _0: {
+      TAG: /* Fn */1,
+      _0: {
+        TAG: /* App */2,
+        _0: {
+          TAG: /* App */2,
+          _0: {
+            TAG: /* Var */0,
+            _0: 0
+          },
+          _1: {
+            TAG: /* Var */0,
+            _0: 2
+          }
+        },
+        _1: {
+          TAG: /* Var */0,
+          _0: 1
+        }
+      }
+    }
+  }
+};
+
+var fst = {
+  TAG: /* Fn */1,
+  _0: {
+    TAG: /* App */2,
+    _0: {
+      TAG: /* Var */0,
+      _0: 0
+    },
+    _1: trueB
+  }
+};
+
+var snd = {
+  TAG: /* Fn */1,
+  _0: {
+    TAG: /* App */2,
+    _0: {
+      TAG: /* Var */0,
+      _0: 0
+    },
+    _1: falseB
+  }
+};
+
+var pred = {
+  TAG: /* Fn */1,
+  _0: {
+    TAG: /* App */2,
+    _0: fst,
+    _1: {
+      TAG: /* App */2,
+      _0: {
+        TAG: /* App */2,
+        _0: {
+          TAG: /* Var */0,
+          _0: 0
+        },
+        _1: {
+          TAG: /* Fn */1,
+          _0: {
+            TAG: /* App */2,
+            _0: {
+              TAG: /* App */2,
+              _0: pair,
+              _1: {
+                TAG: /* App */2,
+                _0: snd,
+                _1: {
+                  TAG: /* Var */0,
+                  _0: 0
+                }
+              }
+            },
+            _1: {
+              TAG: /* App */2,
+              _0: succ,
+              _1: {
+                TAG: /* App */2,
+                _0: snd,
+                _1: {
+                  TAG: /* Var */0,
+                  _0: 0
+                }
+              }
+            }
+          }
+        }
+      },
+      _1: {
+        TAG: /* App */2,
+        _0: {
+          TAG: /* App */2,
+          _0: pair,
+          _1: zero
+        },
+        _1: zero
+      }
+    }
+  }
+};
+
+function toChurchNumB(n) {
+  var _n = n;
+  var _churchNumB = zero;
+  while(true) {
+    var churchNumB = _churchNumB;
+    var n$1 = _n;
+    if (n$1 < 0) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Name.res",
+              163,
+              16
+            ],
+            Error: new Error()
+          };
+    }
+    if (n$1 === 0) {
+      return churchNumB;
+    }
+    _churchNumB = {
+      TAG: /* App */2,
+      _0: succ,
+      _1: churchNumB
+    };
+    _n = n$1 - 1 | 0;
+    continue ;
+  };
+}
+
+function test(param) {
+  console.log(print_lambda$1($$eval({
+                TAG: /* App */2,
+                _0: pred,
+                _1: toChurchNumB(0)
+              })));
+}
+
+var DebruTest_id = {
+  TAG: /* Fn */1,
+  _0: {
+    TAG: /* Var */0,
+    _0: 0
+  }
+};
+
+var DebruTest_one = {
+  TAG: /* Fn */1,
+  _0: {
+    TAG: /* Fn */1,
+    _0: {
+      TAG: /* App */2,
+      _0: {
+        TAG: /* Var */0,
+        _0: 1
+      },
+      _1: {
+        TAG: /* Var */0,
+        _0: 0
+      }
+    }
+  }
+};
+
+var DebruTest = {
+  id: DebruTest_id,
+  trueB: trueB,
+  falseB: falseB,
+  zero: zero,
+  one: DebruTest_one,
+  succ: succ,
+  pair: pair,
+  fst: fst,
+  snd: snd,
+  pred: pred,
+  toChurchNumB: toChurchNumB,
+  test: test
+};
+
+test(undefined);
+
+function $$eval$1(t) {
+  throw {
+        RE_EXN_ID: "Assert_failure",
+        _1: [
+          "Name.res",
+          204,
+          4
+        ],
+        Error: new Error()
+      };
+}
+
+var DebruLet = {
+  $$eval: $$eval$1
 };
 
 var id = {
@@ -245,4 +592,6 @@ exports.t = t$1;
 exports.fresh_name = fresh_name;
 exports.subst = subst;
 exports.Debru = Debru;
+exports.DebruTest = DebruTest;
+exports.DebruLet = DebruLet;
 /*  Not a pure module */

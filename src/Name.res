@@ -69,8 +69,29 @@ let rec subst = (t, x, u) => {
 module Debru = {
   type rec lambda = 
   | Var(int)
-  | Fn(lambda) // for printing only
+  | Fn(lambda) 
   | App(lambda, lambda)
+
+  let rec toString = (t: lambda): string => switch t {
+  | Var(i) => Js.Int.toString(i)
+  | Fn(b) => "(λ." ++ toString(b) ++")"
+  | App(m, n) => "(" ++ toString(m) ++" " ++ toString(n) ++ ")"
+  }
+
+  let print_lambda = l => {
+    let print_paren = (b, s) => {
+      if b { "(" ++ s ++ ")" } else { s }
+    }
+    let rec go = (l, p) => {
+      switch l {
+        | Var(x) => Js.Int.toString(x)
+        | Fn(a) => print_paren(p>0, "fun -> " ++ go(a, 0))
+        | App(a, b) => print_paren(p>1, go(a, 1) ++ " " ++ go(b, 2))
+
+      }
+    }
+    go(l, 0)
+  }
 
 
   // Var(j) becomes Var(i+j) if j >= d
@@ -95,10 +116,81 @@ module Debru = {
   
   // Homework: implement the complete interpreter
   let eval = (t: lambda) => {
-    assert false
+    let rec evalWithBindIndex = (t:lambda, bi:int) => {
+      let r = switch t {
+      | Var(_) => t
+      | Fn(b) => Fn(evalWithBindIndex(b, bi+1))
+      | App(f, arg) => {
+        switch evalWithBindIndex(f,bi) {
+        | Fn(b) => {
+          let va = evalWithBindIndex(arg, bi)
+          evalWithBindIndex(subst(b, bi+1, shift(1,va)), bi+1)
+        }
+        | k => App(k, evalWithBindIndex(arg, bi))
+        }
+      }
+      }
+      Js.log(print_lambda(t) ++ " evals to " ++ print_lambda(r))
+      r
+    }
+    evalWithBindIndex(t, 0)
+  }
+}
+
+module DebruTest = {
+  open! Debru
+
+  let id = Fn(Var(0))
+  let trueB = Fn(Fn(Var(1)))
+  let falseB = Fn(Fn(Var(0)))
+  let zero = Fn(Fn(Var(0)))
+  let one = Fn(Fn(App(Var(1),Var(0))))
+  let succ = Fn(Fn(Fn(App(Var(1),App(App(Var(2),Var(1)),Var(0))))))
+  let pair = Fn(Fn(Fn(App(App(Var(0),Var(2)),Var(1)))))
+  let fst = Fn(App(Var(0),trueB))
+  let snd = Fn(App(Var(0),falseB))
+  let pred = 
+  Fn(App(
+    fst,App(
+      App(
+        Var(0),
+        Fn(App(
+          App(pair,App(snd,Var(0))),
+          App(succ,App(snd,Var(0)))))),
+      App(App(pair,zero),zero))))
+  let toChurchNumB = (n : int) => {
+    let rec helper = (n: int, churchNumB: lambda) : lambda => 
+      if n < 0 {assert false}
+      else {
+        switch n {
+        | 0 => churchNumB 
+        | _ => helper(n-1, App(succ, churchNumB))
+        }
+      }
+    helper(n, zero)
   }
 
+  let test = () => {
+    // Js.log(print_lambda(id))
+    // Js.log(print_lambda(trueB))
+    // Js.log(print_lambda(falseB))
+    // Js.log(print_lambda(zero))
+    // Js.log(print_lambda(one))
+    // Js.log(print_lambda(fst))
+    // Js.log(print_lambda(snd))
+    // Js.log(print_lambda(succ))
+    // Js.log(print_lambda(toChurchNumB(9)))
+    // Js.log(print_lambda(eval(toChurchNumB(9))))
+    // let pair2_1 = App(App(pair,toChurchNumB(2)),toChurchNumB(1))
+    // Js.log(print_lambda(eval(pair2_1)))
+    // Js.log(print_lambda(eval(App(fst,pair2_1))))
+    // Js.log(print_lambda(eval(App(snd,pair2_1))))
+    // Js.log(print_lambda(App(pred,toChurchNumB(1))))
+    Js.log(print_lambda(eval(App(pred,toChurchNumB(0)))))
+  }
 }
+
+let _ = DebruTest.test()
 
 // Homework: support let
 module DebruLet = {

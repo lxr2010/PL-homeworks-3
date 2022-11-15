@@ -1,0 +1,129 @@
+fun x -> y x
+fun z -> y z
+fun x -> fun y -> (fun x -> x) x y
+fun z -> fun y -> (fun z -> z) z y
+0 evals to 0
+1 evals to 1
+fun -> 1 evals to fun -> 1
+fun -> fun -> 1 evals to fun -> fun -> 1
+0 (fun -> fun -> 1) evals to 0 (fun -> fun -> 1)
+fun -> 0 (fun -> fun -> 1) evals to fun -> 0 (fun -> fun -> 1)
+0 evals to 0
+0 evals to 0
+2 evals to 2
+0 2 evals to 0 2
+1 evals to 1
+0 2 1 evals to 0 2 1
+fun -> 0 2 1 evals to fun -> 0 2 1
+fun -> fun -> 0 2 1 evals to fun -> fun -> 0 2 1
+fun -> fun -> fun -> 0 2 1 evals to fun -> fun -> fun -> 0 2 1
+0 evals to 0
+0 evals to 0
+fun -> 0 evals to fun -> 0
+fun -> fun -> 0 evals to fun -> fun -> 0
+0 (fun -> fun -> 0) evals to 0 (fun -> fun -> 0)
+fun -> 0 (fun -> fun -> 0) evals to fun -> 0 (fun -> fun -> 0)
+0 evals to 0
+0 evals to 0
+0 evals to 0
+fun -> 0 evals to fun -> 0
+fun -> fun -> 0 evals to fun -> fun -> 0
+0 (fun -> fun -> 0) evals to 0 (fun -> fun -> 0)
+(fun -> 0 (fun -> fun -> 0)) 0 evals to 0 (fun -> fun -> 0)
+0 evals to 0
+2 evals to 2
+0 2 evals to 0 2
+1 evals to 1
+0 2 1 evals to 0 2 1
+fun -> 0 2 1 evals to fun -> 0 2 1
+fun -> fun -> 0 2 1 evals to fun -> fun -> 0 2 1
+(fun -> fun -> fun -> 0 2 1) ((fun -> 0 (fun -> fun -> 0)) 0) evals to fun -> fun -> 0 2 1
+1 evals to 1
+2 evals to 2
+1 evals to 1
+2 1 evals to 2 1
+0 evals to 0
+2 1 0 evals to 2 1 0
+1 (2 1 0) evals to 1 (2 1 0)
+fun -> 1 (2 1 0) evals to fun -> 1 (2 1 0)
+fun -> fun -> 1 (2 1 0) evals to fun -> fun -> 1 (2 1 0)
+fun -> fun -> fun -> 1 (2 1 0) evals to fun -> fun -> fun -> 1 (2 1 0)
+0 evals to 0
+0 evals to 0
+fun -> 0 evals to fun -> 0
+fun -> fun -> 0 evals to fun -> fun -> 0
+0 (fun -> fun -> 0) evals to 0 (fun -> fun -> 0)
+fun -> 0 (fun -> fun -> 0) evals to fun -> 0 (fun -> fun -> 0)
+0 evals to 0
+0 evals to 0
+0 evals to 0
+fun -> 0 evals to fun -> 0
+fun -> fun -> 0 evals to fun -> fun -> 0
+0 (fun -> fun -> 0) evals to 0 (fun -> fun -> 0)
+(fun -> 0 (fun -> fun -> 0)) 0 evals to 0 (fun -> fun -> 0)
+1 evals to 1
+2 evals to 2
+1 evals to 1
+2 1 evals to 2 1
+0 evals to 0
+2 1 0 evals to 2 1 0
+1 (2 1 0) evals to 1 (2 1 0)
+fun -> 1 (2 1 0) evals to fun -> 1 (2 1 0)
+fun -> fun -> 1 (2 1 0) evals to fun -> fun -> 1 (2 1 0)
+(fun -> fun -> fun -> 1 (2 1 0)) ((fun -> 0 (fun -> fun -> 0)) 0) evals to fun -> fun -> 1 (2 1 0)
+0 evals to 0
+2 evals to 2
+0 2 evals to 0 2
+1 evals to 1
+0 2 1 evals to 0 2 1
+fun -> 0 2 1 evals to fun -> 0 2 1
+(fun -> fun -> fun -> 0 2 1) ((fun -> 0 (fun -> fun -> 0)) 0) ((fun -> fun -> fun -> 1 (2 1 0)) ((fun -> 0 (fun -> fun -> 0)) 0)) evals to fun -> 0 2 1
+fun -> (fun -> fun -> fun -> 0 2 1) ((fun -> 0 (fun -> fun -> 0)) 0) ((fun -> fun -> fun -> 1 (2 1 0)) ((fun -> 0 (fun -> fun -> 0)) 0)) evals to fun -> fun -> 0 2 1
+0 (fun -> (fun -> fun -> fun -> 0 2 1) ((fun -> 0 (fun -> fun -> 0)) 0) ((fun -> fun -> fun -> 1 (2 1 0)) ((fun -> 0 (fun -> fun -> 0)) 0))) evals to 0 (fun -> fun -> 0 2 1)
+0 evals to 0
+2 evals to 2
+0 2 evals to 0 2
+1 evals to 1
+0 2 1 evals to 0 2 1
+fun -> 0 2 1 evals to fun -> 0 2 1
+fun -> fun -> 0 2 1 evals to fun -> fun -> 0 2 1
+fun -> fun -> fun -> 0 2 1 evals to fun -> fun -> fun -> 0 2 1
+0 evals to 0
+fun -> 0 evals to fun -> 0
+fun -> fun -> 0 evals to fun -> fun -> 0
+0 evals to 0
+2 evals to 2
+0 2 evals to 0 2
+1 evals to 1
+0 2 1 evals to 0 2 1
+fun -> 0 2 1 evals to fun -> 0 2 1
+fun -> fun -> 0 2 1 evals to fun -> fun -> 0 2 1
+(fun -> fun -> fun -> 0 2 1) (fun -> fun -> 0) evals to fun -> fun -> 0 2 1
+0 evals to 0
+fun -> 0 evals to fun -> 0
+fun -> fun -> 0 evals to fun -> fun -> 0
+0 evals to 0
+2 evals to 2
+0 2 evals to 0 2
+1 evals to 1
+0 2 1 evals to 0 2 1
+fun -> 0 2 1 evals to fun -> 0 2 1
+(fun -> fun -> fun -> 0 2 1) (fun -> fun -> 0) (fun -> fun -> 0) evals to fun -> 0 2 1
+0 (fun -> (fun -> fun -> fun -> 0 2 1) ((fun -> 0 (fun -> fun -> 0)) 0) ((fun -> fun -> fun -> 1 (2 1 0)) ((fun -> 0 (fun -> fun -> 0)) 0))) ((fun -> fun -> fun -> 0 2 1) (fun -> fun -> 0) (fun -> fun -> 0)) evals to 0 (fun -> fun -> 0 2 1) (fun -> 0 2 1)
+0 evals to 0
+1 evals to 1
+fun -> 1 evals to fun -> 1
+fun -> fun -> 1 evals to fun -> fun -> 1
+0 (fun -> fun -> 1) evals to 0 (fun -> fun -> 1)
+(fun -> 0 (fun -> fun -> 1)) (0 (fun -> (fun -> fun -> fun -> 0 2 1) ((fun -> 0 (fun -> fun -> 0)) 0) ((fun -> fun -> fun -> 1 (2 1 0)) ((fun -> 0 (fun -> fun -> 0)) 0))) ((fun -> fun -> fun -> 0 2 1) (fun -> fun -> 0) (fun -> fun -> 0))) evals to 0 (fun -> fun -> 1)
+fun -> (fun -> 0 (fun -> fun -> 1)) (0 (fun -> (fun -> fun -> fun -> 0 2 1) ((fun -> 0 (fun -> fun -> 0)) 0) ((fun -> fun -> fun -> 1 (2 1 0)) ((fun -> 0 (fun -> fun -> 0)) 0))) ((fun -> fun -> fun -> 0 2 1) (fun -> fun -> 0) (fun -> fun -> 0))) evals to fun -> 0 (fun -> fun -> 1)
+0 evals to 0
+fun -> 0 evals to fun -> 0
+fun -> fun -> 0 evals to fun -> fun -> 0
+0 evals to 0
+1 evals to 1
+fun -> 1 evals to fun -> 1
+fun -> fun -> 1 evals to fun -> fun -> 1
+0 (fun -> fun -> 1) evals to 0 (fun -> fun -> 1)
+(fun -> (fun -> 0 (fun -> fun -> 1)) (0 (fun -> (fun -> fun -> fun -> 0 2 1) ((fun -> 0 (fun -> fun -> 0)) 0) ((fun -> fun -> fun -> 1 (2 1 0)) ((fun -> 0 (fun -> fun -> 0)) 0))) ((fun -> fun -> fun -> 0 2 1) (fun -> fun -> 0) (fun -> fun -> 0)))) (fun -> fun -> 0) evals to 0 (fun -> fun -> 1)
+0 (fun -> fun -> 1)
