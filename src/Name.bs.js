@@ -91,7 +91,7 @@ function subst(t, i, u) {
 }
 
 function $$eval(t) {
-  var evalWithBindIndex = function (_t, bi) {
+  var evalHelper = function (_t) {
     while(true) {
       var t = _t;
       switch (t.TAG | 0) {
@@ -100,25 +100,24 @@ function $$eval(t) {
         case /* Fn */1 :
             return {
                     TAG: /* Fn */1,
-                    _0: evalWithBindIndex(t._0, bi + 1 | 0)
+                    _0: evalHelper(t._0)
                   };
         case /* App */2 :
             var arg = t._1;
-            var b = evalWithBindIndex(t._0, bi);
+            var b = evalHelper(t._0);
             switch (b.TAG | 0) {
               case /* Fn */1 :
-                  var va = evalWithBindIndex(arg, bi);
+                  var va = evalHelper(arg);
                   var va_shifted = shift_aux(1, 0, va);
                   var b_substed = subst(b._0, 0, va_shifted);
-                  var b_substed_deshifted = shift_aux(-1, 0, b_substed);
-                  _t = b_substed_deshifted;
+                  _t = shift_aux(-1, 0, b_substed);
                   continue ;
               case /* Var */0 :
               case /* App */2 :
                   return {
                           TAG: /* App */2,
                           _0: b,
-                          _1: evalWithBindIndex(arg, bi)
+                          _1: evalHelper(arg)
                         };
               
             }
@@ -126,7 +125,7 @@ function $$eval(t) {
       }
     };
   };
-  return evalWithBindIndex(t, 0);
+  return evalHelper(t);
 }
 
 var Debru = {
@@ -515,7 +514,7 @@ function subst$1(_t, i, u) {
 }
 
 function $$eval$1(t) {
-  var evalWithBindIndex = function (_t, bi) {
+  var evalWithBindIndex = function (_t) {
     while(true) {
       var t = _t;
       switch (t.TAG | 0) {
@@ -523,24 +522,23 @@ function $$eval$1(t) {
             return t;
         case /* App */1 :
             var arg = t._1;
-            var b = evalWithBindIndex(t._0, bi);
+            var b = evalWithBindIndex(t._0);
             if (b.TAG !== /* Fn */2) {
               return {
                       TAG: /* App */1,
                       _0: b,
-                      _1: evalWithBindIndex(arg, bi)
+                      _1: evalWithBindIndex(arg)
                     };
             }
-            var va = evalWithBindIndex(arg, bi);
+            var va = evalWithBindIndex(arg);
             var va_shifted = shift_aux$1(1, 0, va);
             var b_substed = subst$1(b._0, 0, va_shifted);
-            var b_substed_deshifted = shift_aux$1(-1, 0, b_substed);
-            _t = b_substed_deshifted;
+            _t = shift_aux$1(-1, 0, b_substed);
             continue ;
         case /* Fn */2 :
             return {
                     TAG: /* Fn */2,
-                    _0: evalWithBindIndex(t._0, bi + 1 | 0)
+                    _0: evalWithBindIndex(t._0)
                   };
         case /* Let */3 :
             _t = {
@@ -556,7 +554,7 @@ function $$eval$1(t) {
       }
     };
   };
-  return evalWithBindIndex(t, 0);
+  return evalWithBindIndex(t);
 }
 
 var DebruLet = {

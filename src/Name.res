@@ -48,25 +48,25 @@ module Debru = {
   
   // Homework: implement the complete interpreter
   let eval = (t: lambda) => {
-    let rec evalWithBindIndex = (t:lambda, bi:int) => {
+    let rec evalHelper = (t:lambda) => {
       switch t {
       | Var(_) => t
-      | Fn(b) => Fn(evalWithBindIndex(b, bi+1))
+      | Fn(b) => Fn(evalHelper(b))
       | App(f, arg) => {
-        switch evalWithBindIndex(f,bi) {
+        switch evalHelper(f) {
         | Fn(b) => {
-          let va = evalWithBindIndex(arg, bi)
+          let va = evalHelper(arg)
           let va_shifted = shift(1,va)
           let b_substed = subst(b, 0, va_shifted)
           let b_substed_deshifted = shift(-1, b_substed)
-          evalWithBindIndex(b_substed_deshifted, bi)
+          evalHelper(b_substed_deshifted)
         }
-        | k => App(k, evalWithBindIndex(arg, bi))
+        | k => App(k, evalHelper(arg))
         }
       }
       }
     }
-    evalWithBindIndex(t, 0)
+    evalHelper(t)
   }
 }
 
@@ -165,26 +165,26 @@ module DebruLet = {
 
 // eval Let(l1, l2) == eval App((lambda.l2),l1)
   let eval = (t: lambda) => {
-    let rec evalWithBindIndex = (t:lambda, bi:int) => {
+    let rec evalHelper = (t:lambda) => {
       switch t {
       | Var(_) => t
-      | Fn(b) => Fn(evalWithBindIndex(b, bi+1))
-      | Let(loc, body) => evalWithBindIndex(App(Fn(body),loc),bi)
+      | Fn(b) => Fn(evalHelper(b))
+      | Let(loc, body) => evalHelper(App(Fn(body),loc))
       | App(f, arg) => {
-        switch evalWithBindIndex(f,bi) {
+        switch evalHelper(f) {
         | Fn(b) => {
-          let va = evalWithBindIndex(arg, bi)
+          let va = evalHelper(arg)
           let va_shifted = shift(1,va)
           let b_substed = subst(b, 0, va_shifted)
           let b_substed_deshifted = shift(-1, b_substed)
-          evalWithBindIndex(b_substed_deshifted, bi)
+          evalHelper(b_substed_deshifted)
         }
-        | k => App(k, evalWithBindIndex(arg, bi))
+        | k => App(k, evalHelper(arg))
         }
       }
       }
     }
-    evalWithBindIndex(t, 0)
+    evalHelper(t)
   }
 }
 
